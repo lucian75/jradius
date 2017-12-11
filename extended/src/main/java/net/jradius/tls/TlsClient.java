@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.List;
 
+import org.bouncycastle.asn1.x509.X509Name;
+
 interface TlsClient
 {
     void init(TlsProtocolHandler handler);
@@ -23,11 +25,11 @@ interface TlsClient
     TlsKeyExchange createKeyExchange() throws IOException;
 
     // List is (X509Name)
-    void processServerCertificateRequest(byte[] certificateTypes, List certificateAuthorities);
+    void processServerCertificateRequest(byte[] certificateTypes, List<X509Name> certificateAuthorities);
 
     byte[] generateCertificateSignature(byte[] md5andsha1) throws IOException;
 
-    Certificate getCertificate();
+    CertificateChain getCertificate();
 
     TlsCipher createCipher(SecurityParameters securityParameters) throws IOException;
 }

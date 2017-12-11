@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 
+import org.bouncycastle.asn1.x509.Certificate;
+import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.asn1.x509.X509CertificateStructure;
-import org.bouncycastle.asn1.x509.X509Extension;
-import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.Signer;
 import org.bouncycastle.crypto.agreement.DHBasicAgreement;
@@ -33,7 +32,7 @@ class TlsDHKeyExchange implements TlsKeyExchange
 
     private TlsProtocolHandler handler;
     private CertificateVerifyer verifyer;
-    private short keyExchange;
+    private Algorithm keyExchange;
     private TlsSigner tlsSigner;
 
     private AsymmetricKeyParameter serverPublicKey = null;
@@ -41,20 +40,23 @@ class TlsDHKeyExchange implements TlsKeyExchange
     private DHPublicKeyParameters dhAgreeServerPublicKey = null;
     private AsymmetricCipherKeyPair dhAgreeClientKeyPair = null;
 
-    TlsDHKeyExchange(TlsProtocolHandler handler, CertificateVerifyer verifyer, short keyExchange)
+    TlsDHKeyExchange(TlsProtocolHandler handler, CertificateVerifyer verifyer, Algorithm keyExchange)
     {
         switch (keyExchange)
         {
-            case TlsKeyExchange.KE_DH_RSA:
-            case TlsKeyExchange.KE_DH_DSS:
+            case KE_DH_RSA:
+            case KE_DH_DSS:
                 this.tlsSigner = null;
                 break;
-            case TlsKeyExchange.KE_DHE_RSA:
+
+            case KE_DHE_RSA:
                 this.tlsSigner = new TlsRSASigner();
                 break;
-            case TlsKeyExchange.KE_DHE_DSS:
+
+            case KE_DHE_DSS:
                 this.tlsSigner = new TlsDSSSigner();
                 break;
+
             default:
                 throw new IllegalArgumentException("unsupported key exchange algorithm");
         }
@@ -69,9 +71,9 @@ class TlsDHKeyExchange implements TlsKeyExchange
         handler.failWithError(TlsProtocolHandler.AL_fatal, TlsProtocolHandler.AP_unexpected_message);
     }
 
-    public void processServerCertificate(Certificate serverCertificate) throws IOException
+    public void processServerCertificate(CertificateChain serverCertificate) throws IOException
     {
-        X509CertificateStructure x509Cert = serverCertificate.certs[0];
+        Certificate x509Cert = serverCertificate.certs[0];
         SubjectPublicKeyInfo keyInfo = x509Cert.getSubjectPublicKeyInfo();
 
         try
@@ -90,7 +92,7 @@ class TlsDHKeyExchange implements TlsKeyExchange
             handler.failWithError(TlsProtocolHandler.AL_fatal, TlsProtocolHandler.AP_internal_error);
         }
 
-        // TODO 
+        // TODO
         /*
          * Perform various checks per RFC2246 7.4.2: "Unless otherwise specified, the
          * signing algorithm for the certificate must be the same as the algorithm for the
@@ -101,7 +103,7 @@ class TlsDHKeyExchange implements TlsKeyExchange
 
         switch (this.keyExchange)
         {
-            case TlsKeyExchange.KE_DH_DSS:
+            case KE_DH_DSS:
                 if (!(this.serverPublicKey instanceof DHPublicKeyParameters))
                 {
                     handler.failWithError(TlsProtocolHandler.AL_fatal,
@@ -111,7 +113,8 @@ class TlsDHKeyExchange implements TlsKeyExchange
 //                x509Cert.getSignatureAlgorithm();
                 this.dhAgreeServerPublicKey = validateDHPublicKey((DHPublicKeyParameters)this.serverPublicKey);
                 break;
-            case TlsKeyExchange.KE_DH_RSA:
+
+            case KE_DH_RSA:
                 if (!(this.serverPublicKey instanceof DHPublicKeyParameters))
                 {
                     handler.failWithError(TlsProtocolHandler.AL_fatal,
@@ -121,7 +124,8 @@ class TlsDHKeyExchange implements TlsKeyExchange
 //              x509Cert.getSignatureAlgorithm();
                 this.dhAgreeServerPublicKey = validateDHPublicKey((DHPublicKeyParameters)this.serverPublicKey);
                 break;
-            case TlsKeyExchange.KE_DHE_RSA:
+
+            case KE_DHE_RSA:
                 if (!(this.serverPublicKey instanceof RSAKeyParameters))
                 {
                     handler.failWithError(TlsProtocolHandler.AL_fatal,
@@ -129,13 +133,15 @@ class TlsDHKeyExchange implements TlsKeyExchange
                 }
                 validateKeyUsage(x509Cert, KeyUsage.digitalSignature);
                 break;
-            case TlsKeyExchange.KE_DHE_DSS:
+
+            case KE_DHE_DSS:
                 if (!(this.serverPublicKey instanceof DSAPublicKeyParameters))
                 {
                     handler.failWithError(TlsProtocolHandler.AL_fatal,
                         TlsProtocolHandler.AP_certificate_unknown);
                 }
                 break;
+
             default:
                 handler.failWithError(TlsProtocolHandler.AL_fatal,
                     TlsProtocolHandler.AP_unsupported_certificate);
@@ -233,21 +239,17 @@ class TlsDHKeyExchange implements TlsKeyExchange
         return BigIntegers.asUnsignedByteArray(agreement);
     }
 
-    private void validateKeyUsage(X509CertificateStructure c, int keyUsageBits) throws IOException
+    private void validateKeyUsage(Certificate c, int keyUsageBits) throws IOException
     {
-        X509Extensions exts = c.getTBSCertificate().getExtensions();
+        Extensions exts = c.getTBSCertificate().getExtensions();
         if (exts != null)
         {
-            X509Extension ext = exts.getExtension(X509Extensions.KeyUsage);
-            if (ext != null)
+            KeyUsage ku = KeyUsage.fromExtensions(exts);
+            int bits = ku.getBytes()[0] & 0xff;
+            if ((bits & keyUsageBits) != keyUsageBits)
             {
-                KeyUsage ku = KeyUsage.getInstance(ext);
-                int bits = ku.getBytes()[0] & 0xff;
-                if ((bits & keyUsageBits) != keyUsageBits)
-                {
-                    handler.failWithError(TlsProtocolHandler.AL_fatal,
-                        TlsProtocolHandler.AP_certificate_unknown);
-                }
+                handler.failWithError(TlsProtocolHandler.AL_fatal,
+                    TlsProtocolHandler.AP_certificate_unknown);
             }
         }
     }
@@ -286,5 +288,9 @@ class TlsDHKeyExchange implements TlsKeyExchange
         // TODO See RFC 2631 for more discussion of Diffie-Hellman validation
 
         return key;
+    }
+
+    public Algorithm getAlgorithm() {
+        return keyExchange;
     }
 }
