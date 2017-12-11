@@ -33,6 +33,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
 
 import net.jradius.log.RadiusLog;
@@ -85,7 +86,7 @@ public final class MSCHAP
 
     private static byte[] NtPasswordHash(byte[] Password) throws NoSuchAlgorithmException
     {
-    	Security.addProvider(new BouncyCastlePQCProvider());
+    	Security.addProvider(new BouncyCastleProvider());
 
         byte PasswordHash[] = new byte[16];
         byte uniPassword[] = unicode(Password);
