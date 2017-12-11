@@ -1,6 +1,24 @@
 *.class
 
+# office backup file
+~$*
+*.bak
+*.log.zip
+*.log
+
 # Package Files #
 *.jar
 *.war
 *.ear
+
+# build result
+bin/
+target/
+build/
+coverage-reports/
+
+#eclipse
+.settings/
+.project
+.classpath
+.springBeans
