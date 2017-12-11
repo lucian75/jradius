@@ -466,6 +466,11 @@ public class RadiusDictionary
                 valueClass = "IPv6AddrValue";
                 extraUtils = "import java.net.InetAddress;\n";
             }
+            if (desc.type.startsWith("ipv6prefix"))
+            {
+                valueClass = "IPv6PrefixValue";
+                extraUtils = "import java.net.InetAddress;\n";
+            }
             if (desc.type.startsWith("byte"))
             {
                 valueClass = "IntegerValue";

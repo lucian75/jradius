@@ -21,6 +21,7 @@ $INCLUDE ../dict/dictionary.rfc4818
 $INCLUDE ../dict/dictionary.rfc4849
 $INCLUDE ../dict/dictionary.rfc5176
 $INCLUDE ../dict/dictionary.rfc5580
+$INCLUDE ../dict/dictionary.rfc6911
 
 $INCLUDE ../dict/dictionary.coova
 $INCLUDE ../dict/dictionary.chillispot
