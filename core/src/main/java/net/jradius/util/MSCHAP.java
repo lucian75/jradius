@@ -23,6 +23,7 @@ package net.jradius.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 
@@ -31,6 +32,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.IvParameterSpec;
+
+import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
 
 import net.jradius.log.RadiusLog;
 
@@ -82,6 +85,8 @@ public final class MSCHAP
 
     private static byte[] NtPasswordHash(byte[] Password) throws NoSuchAlgorithmException
     {
+    	Security.addProvider(new BouncyCastlePQCProvider());
+
         byte PasswordHash[] = new byte[16];
         byte uniPassword[] = unicode(Password);
         MessageDigest md = MessageDigest.getInstance("MD4");
