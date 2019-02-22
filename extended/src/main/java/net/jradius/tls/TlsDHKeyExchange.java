@@ -245,11 +245,13 @@ class TlsDHKeyExchange implements TlsKeyExchange
         if (exts != null)
         {
             KeyUsage ku = KeyUsage.fromExtensions(exts);
-            int bits = ku.getBytes()[0] & 0xff;
-            if ((bits & keyUsageBits) != keyUsageBits)
+            if(ku != null)
             {
-                handler.failWithError(TlsProtocolHandler.AL_fatal,
-                    TlsProtocolHandler.AP_certificate_unknown);
+                int bits = ku.getBytes()[0] & 0xff;
+                if ((bits & keyUsageBits) != keyUsageBits)
+                {
+                    handler.failWithError(TlsProtocolHandler.AL_fatal, TlsProtocolHandler.AP_certificate_unknown);
+                }
             }
         }
     }
