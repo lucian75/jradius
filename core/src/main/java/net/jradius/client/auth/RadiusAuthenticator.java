@@ -38,7 +38,9 @@ import net.jradius.packet.attribute.RadiusAttribute;
  */
 public abstract class RadiusAuthenticator 
 {
-	protected RadiusClient client;
+    protected static final char AD_DOWNLEVEL_LOGONNAME_SEP = '\\';
+
+    protected RadiusClient client;
     protected RadiusAttribute username;
     protected RadiusAttribute password;
     protected RadiusAttribute classAttribute;
