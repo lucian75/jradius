@@ -51,7 +51,7 @@ public class MSCHAPv2Authenticator extends RadiusAuthenticator
         
         RadiusAttribute attr;
         byte authChallenge[] = RadiusRandom.getBytes(16);
-        byte chapResponse[] = MSCHAP.doMSCHAPv2(username.getValue().getBytes(), password.getValue().getBytes(), authChallenge);
+        byte chapResponse[] = MSCHAP.doMSCHAPv2(getChallengeUserName(), password.getValue().getBytes(), authChallenge);
 
         p.addAttribute(attr = AttributeFactory.newAttribute("MS-CHAP-Challenge"));
         attr.setValue(authChallenge);
