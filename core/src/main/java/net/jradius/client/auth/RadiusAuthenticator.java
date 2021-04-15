@@ -162,4 +162,19 @@ public abstract class RadiusAuthenticator
     {
         return stateAttribute == null ? null : stateAttribute.getValue().getBytes();
     }
+
+    /**
+     * @return Returns the username for challenge.
+     */
+    protected byte[] getChallengeUserName() {
+        String userName = new String(getUsername());
+
+        int begin = userName.indexOf(AD_DOWNLEVEL_LOGONNAME_SEP);
+        if(begin < 0) {
+            return userName.getBytes();
+        }
+        else {
+            return userName.substring(begin + 1).getBytes();
+        }
+    }
 }
