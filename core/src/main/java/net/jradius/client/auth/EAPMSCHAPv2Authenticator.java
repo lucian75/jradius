@@ -86,10 +86,10 @@ public class EAPMSCHAPv2Authenticator extends EAPAuthenticator
                 response[2] = (byte) (length << 8 & 0xFF);  // MS-Length
                 response[3] = (byte) (length & 0xFF);       // MS-Length
                 response[4] = 49;                           // Value-Size
-                System.arraycopy(MSCHAP.doMSCHAPv2(getUsername(), getPassword(), challenge), 2, response, 5, 48); // Response
+                byte[] userName = getChallengeUserName();
+                System.arraycopy(MSCHAP.doMSCHAPv2(userName, getPassword(), challenge), 2, response, 5, 48); // Response
                 response[53] = 0;                            // Flags
-                System.arraycopy(getUsername(), 0, response, 54, getUsername().length); // Name
-                return response;
+                System.arraycopy(userName, 0, response, 54, userName.length); // Name
             }
             
             case EAP_MSCHAPV2_SUCCESS: // EAP-MSCHAPv2-SUCCESS
